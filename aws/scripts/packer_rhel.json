@@ -1,0 +1,58 @@
+{
+    "variables": {
+        "region": "",
+        "parcel_url": "",
+        "cm_repository_url": "",
+        "jdk_repository_url": "",
+        "ami": "",
+        "vpc_id": "",
+        "subnet_id": "",
+        "security_group_id": "",
+        "ami_prefix": "",
+        "ami_virtualization_type": "",
+        "root_device_name": "",
+        "ssh_username": "",
+        "associate_public_ip_address": "false",
+        "java_version": "",
+        "preextract_parcel": "false"
+    },
+    "builders": [
+    {
+        "type": "amazon-ebs",
+        "region": "{{user `region`}}",
+        "source_ami": "{{user `ami`}}",
+        "instance_type": "m3.xlarge",
+        "ssh_username": "{{user `ssh_username`}}",
+        "ami_name": "{{user `ami_prefix`}} {{timestamp}}",
+        "ami_virtualization_type": "{{user `ami_virtualization_type`}}",
+        "ssh_timeout": "10m",
+        "launch_block_device_mappings": [{
+            "device_name": "{{user `root_device_name`}}",
+            "volume_size": 10,
+            "volume_type": "gp2",
+            "delete_on_termination": true
+        }],
+        "vpc_id": "{{user `vpc_id`}}",
+        "subnet_id": "{{user `subnet_id`}}",
+        "security_group_id": "{{user `security_group_id`}}",
+        "ssh_pty": "true",
+        "ssh_private_ip": "false",
+        "associate_public_ip_address": "{{user `associate_public_ip_address`}}",
+        "run_tags": {
+                "owner": "npopa"
+        }
+    }],
+
+    "provisioners": [
+    {
+        "type": "shell",
+        "scripts": ["install_node.sh"],
+        "environment_vars": ["PARCEL_URL={{user `parcel_url`}}", 
+                             "CM_REPOSITORY_URL={{user `cm_repository_url`}}",
+                             "JAVA_VERSION={{user `java_version`}}",
+                             "JDK_REPOSITORY_URL={{user `jdk_repository_url`}}",
+                             "PREEXTRACT_PARCEL={{user `preextract_parcel`}}"]
+    }]
+}
+
+
