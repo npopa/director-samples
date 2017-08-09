@@ -3,6 +3,7 @@ import pprint
 client = boto3.client('ec2')
 
 #ami-8a158fea
+#ami-d52e4bb5 - built ami
 #Original AMI ami-30697651
 
 spot_instances_response = client.request_spot_instances(
@@ -10,7 +11,7 @@ spot_instances_response = client.request_spot_instances(
     InstanceCount=1,
     Type='one-time',
     LaunchSpecification={
-      "ImageId": "ami-d52e4bb5",
+      "ImageId": "ami-30697651",
       "InstanceType": "m2.2xlarge",
       "KeyName": "npopa-ps",
                 "BlockDeviceMappings": [
@@ -52,13 +53,20 @@ while (len(instances.values()) < spot_instance_req_num) : #This should wait till
         if InstanceId is not None:
             instances[spot_instance_req.get('SpotInstanceRequestId')]=InstanceId
         else:
-            print(spot_instance_req.get('SpotInstanceRequestId'), "Still did not get an InstanceId")
-
-print instances
+            pass
+            #print(spot_instance_req.get('SpotInstanceRequestId'), "Still did not get an InstanceId")
 
 for i in instances.values():
     client.create_tags(Resources=[i],Tags=[{'Key': 'owner','Value': 'npopa'}])
 
+pprint.pprint(instances)
+
+for i in instances.values():
+   instance_response = client.describe_instances(InstanceIds=[i])
+   pprint.pprint(instance_response)
+
+   
+    
 
 
 # Find information about the VM: curl http://169.254.169.254/2009-04-04/meta-data/

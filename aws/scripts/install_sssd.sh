@@ -1,6 +1,13 @@
 #!/bin/bash
 
-. /tmp/params.sh
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
+if [[ -z ${LDAP_HOST} || -z ${LDAP_SUFFIX} || -z ${KDC_HOST_NAME} || -z ${REALM_NAME} ]]; then 
+	echo ' ${JAVA_VERSION}, ${JAVA_HOME}, ${JAVA_DOWNLOAD_URL}, ${REALM_NAME} must be defined'
+	exit 1
+fi
 
 ##### SSSD
 
@@ -78,11 +85,11 @@ ldap_krb5_ticket_lifetime = 86400
 auth_provider = krb5
 chpass_provider = krb5
 ldap_force_upper_case_realm = True
-krb5_server = ${KDC_HOST}:88
-krb5_realm = ${CLUSTER_REALM}
+krb5_server = ${KDC_HOST_NAME}:88
+krb5_realm = ${REALM_NAME}
 krb5_store_password_if_offline = true
 krb5_auth_timeout = 15
-krb5_kpasswd = ${KDC_HOST}
+krb5_kpasswd = ${KDC_HOST_NAME}
 
 # Mapping --------------------
 ldap_user_uid_number = uidNumber

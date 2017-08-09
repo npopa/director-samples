@@ -1,15 +1,19 @@
 #!/bin/bash
 
-### Install mysql server
-
-. /tmp/params.sh
-
-###  Define Variables  ###
-
 ##### Install mariadb server
 
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
+if [[ -z ${MYSQL_ADMIN} || -z ${MYSQL_ADMIN_PASS} ]]; then
+	echo ' ${MYSQL_ADMIN}, ${MYSQL_ADMIN_PASS} must be defined'
+	exit 1
+fi
+
+
 yum install -y mariadb-server
-	
+
 cat <<EOF >/etc/my.cnf
 [mysqld]
 transaction-isolation = READ-COMMITTED
@@ -45,7 +49,7 @@ join_buffer_size = 8M
 innodb_file_per_table = 1
 innodb_flush_log_at_trx_commit  = 2
 innodb_log_buffer_size = 64M
-innodb_buffer_pool_size = 4G
+innodb_buffer_pool_size = 512M
 innodb_thread_concurrency = 8
 innodb_flush_method = O_DIRECT
 innodb_log_file_size = 512M
@@ -59,17 +63,7 @@ EOF
 systemctl start mariadb
 systemctl enable mariadb
 
-###  Secure MariaDB by setting a root password, removing anonymous users, remove test database, and reload these privileges.  ###
-/usr/bin/mysql_secure_installation <<EOF
-y
-${MYSQL_ADMIN_PASS}
-${MYSQL_ADMIN_PASS}
-y
-n
-y
-y
-EOF
-
+/usr/bin/mysqladmin -u ${MYSQL_ADMIN} password ${MYSQL_ADMIN_PASS}
 
 mysql -u ${MYSQL_ADMIN} --password=${MYSQL_ADMIN_PASS} <<-ESQL
 use mysql;
@@ -83,5 +77,6 @@ GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_ADMIN}'@'localhost' IDENTIFIED BY '${MYS
 UPDATE user SET Grant_priv = 'Y' WHERE User = '${MYSQL_ADMIN}';
 flush privileges;
 ESQL
+
 
 

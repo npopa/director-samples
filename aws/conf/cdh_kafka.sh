@@ -1,6 +1,15 @@
 #!/bin/bash
 
-. ./aws.sh #this should load the credentials. Else they can be defined here inline as below:
+
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
+if [[ -f ~/.aws.sh ]]; then 
+	source  ~/.aws.sh
+else
+	cat <<'EOF'
+File  ~/.aws.sh is missing. Create one with the below content: 
 export AWS_KEY_ID=${AWS_KEY_ID}
 export AWS_SECRET_KEY=${AWS_SECRET_KEY}
 export AWS_REGION=${AWS_REGION} #"us-west-2"
@@ -10,30 +19,21 @@ export AWS_AMI_ID=${AWS_AMI_ID} #"ami-30697651"
 export SSH_USERNAME=${SSH_USERNAME} #ec2-user
 export SSH_PEM_PATH=${SSH_PEM_PATH} #"/home/ec2-user/mykey.pem"
 #### End AWS settings
+EOF
+fi
 
-
-export CLUSTER_NAME="mypoc-kafka"
+export CLUSTER_NAME="Kafka211"
 export ENVIRONMENT_NAME="Development"
 export CLOUDERA_MANAGER_NAME="CM511"
 export CLUSTER_OWNER="npopa"
 export AWS_INSTANCE_PREFIX="${CLUSTER_NAME}"
 
-#There are three masters
+#Kafka brokers
 export KAFKA_NODE_COUNT="3"
 
 export RHEL_VERSION="7" #6|7
 export KAFKA_VERSION="2.1.1"
 export KAFKA_REPO="http://archive.cloudera.com/kafka/parcels/${KAFKA_VERSION}/"
-
-export DIRECTOR_IP=$(ip addr | grep eth0 -A2 | head -n3 | tail -n1 | awk -F'[/ ]+' '{print $3}')
-
-export SENTRY_ADMIN_GROUPS="hive,impala,hue,solr,kafka,hadmin_g"
-
-#SSL
-export JKS_KEYSTORE="/opt/cloudera/security/jks/keystore.jks"
-export JKS_KEYSTORE_PASSWORD="cloudera"
-export JKS_TRUSTSTORE="/opt/cloudera/security/jks/truststore.jks"
-export JKS_TRUSTSTORE_PASSWORD="cloudera"
 
 echo "Updating Director host to: $(hostname -f)"
 sed -i "s/DIRECTOR_HOST=.*/DIRECTOR_HOST=$(hostname -f)/g" ./params.sh

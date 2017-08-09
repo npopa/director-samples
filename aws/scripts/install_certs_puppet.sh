@@ -24,7 +24,14 @@
 #    ├── keynopw.pem -> ip-10-10-10-116-keynopw.pem
 #    └── key.pem -> ip-10-10-10-116-key.pem
 
-. /tmp/params.sh
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
+if [[ -z ${CERT_OUTPUT_DIR} || -z ${PUPPET_SSL_HOME} || -z ${JAVA_HOME} || -z ${CERT_KEY_PASS} ]]; then 
+	echo ' ${CERT_OUTPUT_DIR}, ${PUPPET_SSL_HOME}, ${JAVA_HOME}, ${CERT_KEY_PASS} must be defined'
+	exit 1
+fi
 
 rm -rf $CERT_OUTPUT_DIR
 mkdir -p $CERT_OUTPUT_DIR

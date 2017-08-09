@@ -2,8 +2,14 @@
 
 ### Install ldap server
 
-. /tmp/params.sh
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
 
+if [[ -z ${DEFAULT_PASSWORD} || -z ${LDAP_SUFFIX} || -z ${LDAP_DC} ]]; then 
+	echo ' ${DEFAULT_PASSWORD}, ${LDAP_SUFFIX}, ${LDAP_DC} must be defined'
+	exit 1
+fi
 ##### LDAP
 #to enable logging 
 #sudo vi /etc/rsyslog.conf
@@ -17,12 +23,8 @@ yum install -y  openldap compat-openldap openldap-clients openldap-servers openl
 
 systemctl start slapd.service
 systemctl enable slapd.service
-#sudo netstat -antup | grep -i 389
 
-# slappasswd
-#New password:
-#Re-enter new password:
-# {SSHA}DLBpvfrFXUDZCjjxnas2vfigogHTpylZ
+LDAP_ADMIN_PASS=$(slappasswd -s ${DEFAULT_PASSWORD})
 
 cat > ${LDAP_SETUP}/db.ldif <<EOT
 dn: olcDatabase={2}hdb,cn=config
@@ -38,7 +40,7 @@ olcRootDN: cn=ldapadm,${LDAP_SUFFIX}
 dn: olcDatabase={2}hdb,cn=config
 changetype: modify
 replace: olcRootPW
-olcRootPW: {SSHA}DLBpvfrFXUDZCjjxnas2vfigogHTpylZ
+olcRootPW: ${LDAP_ADMIN_PASS}
 EOT
 
 ldapmodify -Y EXTERNAL  -H ldapi:/// -f ${LDAP_SETUP}/db.ldif

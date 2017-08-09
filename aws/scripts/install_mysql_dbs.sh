@@ -2,7 +2,15 @@
 
 ### Install mysql server
 
-. /tmp/params.sh
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
+if [[ -z ${MYSQL_ADMIN} || -z ${MYSQL_ADMIN_PASS} ]]; then 
+	echo ' ${MYSQL_ADMIN}, ${MYSQL_ADMIN_PASS} must be defined'
+	exit 1
+fi
+
 
 ###  Define Variables  ###
 

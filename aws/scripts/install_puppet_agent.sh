@@ -2,7 +2,14 @@
 
 ### Add kerberos principals for some users
 
-. /tmp/params.sh
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
+if [[ -z ${PUPPET_HOST} ]]; then 
+	echo ' ${PUPPET_HOST} must be defined'
+	exit 1
+fi
 
 ###Puppet Agent
 sudo rpm -Uvh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm

@@ -1,8 +1,9 @@
 #!/bin/bash
 
-### Add kerberos principals for some users
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
 
-. /tmp/params.sh
 
 #Install puppet server
 

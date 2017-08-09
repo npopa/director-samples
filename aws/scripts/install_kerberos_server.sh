@@ -1,39 +1,50 @@
 #!/bin/bash
 
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
 #### Kerberos server setup
 
-. /tmp/params.sh
+echo "==> Installing Kerberos MIT server"
 
+if [[ -z ${REALM_NAME} || -z ${DEFAULT_PASSWORD} ]]; then 
+	echo ' ${REALM_NAME}, ${DEFAULT_PASSWORD} must be defined'
+	exit 1
+fi
+echo "Realm: ${REALM_NAME}"
 
 yum install -y krb5-server krb5-pkinit-openssl krb5-server-ldap words krb5-workstation cyrus-sasl-gssapi pam_krb5 
 
-mv /var/kerberos/krb5kdc/kdc.conf /var/kerberos/krb5kdc/kdc.conf.`date +"%Y%m%d%H%M%S%N"`
-cat <<EOF > /tmp/kdc.conf
+cat <<EOF > /var/kerberos/krb5kdc/kdc.conf
 [kdcdefaults]
  kdc_ports = 88
  kdc_tcp_ports = 88
 
 [realms]
- ${CLUSTER_REALM} = {
+${REALM_NAME} = {
   max_renewable_life = 7d 0h 0m 0s
   acl_file = /var/kerberos/krb5kdc/kadm5.acl
   dict_file = /usr/share/dict/words
   admin_keytab = /var/kerberos/krb5kdc/kadm5.keytab
   supported_enctypes = aes256-cts:normal arcfour-hmac:normal
   default_principal_flags = +renewable
+  max_renewable_life = 30d
  }
 EOF
-sudo mv /tmp/kdc.conf /var/kerberos/krb5kdc/kdc.conf
 
-sudo mv /var/kerberos/krb5kdc/kadm5.acl /var/kerberos/krb5kdc/kadm5.acl.`date +"%Y%m%d%H%M%S%N"`
-sudo cat <<EOF > /tmp/kadm5.acl
-*/admin@${CLUSTER_REALM}   *
+cat <<EOF > /var/kerberos/krb5kdc/kadm5.acl
+*/admin@${REALM_NAME}   *
 EOF
-sudo mv /tmp/kadm5.acl /var/kerberos/krb5kdc/kadm5.acl
 
-sudo kdb5_util create -s -P ${KDC_ADMIN_PASSWORD}
+kdb5_util create -s -P ${DEFAULT_PASSWORD}
 
-sudo service krb5kdc restart 
-sudo service kadmin restart 
-sudo chkconfig kadmin on
-sudo chkconfig krb5kdc on
+systemctl start krb5kdc.service
+systemctl enable krb5kdc.service
+systemctl start kadmin.service
+systemctl enable kadmin.service
+
+#TODO - add a default admin principal
+#printf "%b" "add_principal -pw ${DEFAULT_PASSWORD} cloudera/admin" | kadmin.local
+printf "%b" "add_principal -pw ${DEFAULT_PASSWORD} ${KERBEROS_ADMIN_USER}" | kadmin.local
+

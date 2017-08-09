@@ -2,7 +2,9 @@
 
 #### Install tinyproxy
 
-. /tmp/params.sh
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
 
 yum -y install tinyproxy
 

@@ -2,13 +2,20 @@
 
 ### Install mysql server
 
-. /tmp/params.sh
+if [[ -f /tmp/params.sh ]]; then 
+	source /tmp/params.sh
+fi
+
+if [[ -z ${MYSQL_ADMIN} || -z ${MYSQL_ADMIN_PASS} ]]; then 
+	echo ' ${MYSQL_ADMIN}, ${MYSQL_ADMIN_PASS} must be defined'
+	exit 1
+fi
 
 ###  Define Variables  ###
 
 ##### Install mysql server
 wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm -O /tmp/mysql-community-release-el7-5.noarch.rpm
-rpm -ivh mysql-community-release-el7-5.noarch.rpm
+rpm -ivh /tmp/mysql-community-release-el7-5.noarch.rpm
 yum install -y mysql-community-server
 /usr/bin/mysql_install_db
 chown -R mysql:mysql /var/lib/mysql
@@ -65,15 +72,15 @@ EOF
 
 service mysqld restart
 
-mysql -u ${MYSQL_ADMIN} --password=${MYSQL_ADMIN_PASS} <<-ESQL
+mysql -u ${MYSQL_ADMIN} --password=${MYSQL_ADMIN_PASS} -h localhost <<-ESQL
 use mysql;
 delete from user where user='';
 delete from user where user='${MYSQL_ADMIN}' and host like '%.local';
 delete from user where user='${MYSQL_ADMIN}' and host like '%.lan';
 delete from user where user='${MYSQL_ADMIN}' and host like '%.internal';
-delete from user where user='${MYSQL_ADMIN}' and host like '%.coms';
-GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_ADMIN}'@'%' IDENTIFIED BY '${MYSQL_ADMIN_PASS}';
-GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_ADMIN}'@'localhost' IDENTIFIED BY '${MYSQL_ADMIN_PASS}';
+delete from user where user='${MYSQL_ADMIN}' and host like '%.com';
+GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_ADMIN}'@'%' IDENTIFIED BY '${MYSQL_ADMIN_PASS}'  with grant option;
+GRANT ALL PRIVILEGES ON *.* TO '${MYSQL_ADMIN}'@'localhost' IDENTIFIED BY '${MYSQL_ADMIN_PASS}'  with grant option;
 UPDATE user SET Grant_priv = 'Y' WHERE User = '${MYSQL_ADMIN}';
 flush privileges;
 ESQL
